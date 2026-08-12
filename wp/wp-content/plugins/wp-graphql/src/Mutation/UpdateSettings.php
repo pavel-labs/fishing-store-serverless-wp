@@ -1,0 +1,245 @@
+<?php
+
+namespace WPGraphQL\Mutation;
+
+use GraphQL\Error\UserError;
+use WPGraphQL\AppContext;
+use WPGraphQL\Data\DataSource;
+use WPGraphQL\Registry\TypeRegistry;
+use WPGraphQL\Utils\Utils;
+
+/**
+ * Class UpdateSettings
+ *
+ * @package WPGraphQL\Mutation
+ */
+class UpdateSettings {
+
+	/**
+	 * Registers the CommentCreate mutation.
+	 *
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry The WPGraphQL TypeRegistry
+	 *
+	 * @return void
+	 */
+	public static function register_mutation( TypeRegistry $type_registry ) {
+		$output_fields = self::get_output_fields( $type_registry );
+		$input_fields  = self::get_input_fields( $type_registry );
+
+		if ( empty( $output_fields ) || empty( $input_fields ) ) {
+			return;
+		}
+
+		register_graphql_mutation(
+			'updateSettings',
+			[
+				'inputFields'         => $input_fields,
+				'outputFields'        => $output_fields,
+				'mutateAndGetPayload' => static function ( $input, AppContext $context ) use ( $type_registry ) {
+					$payload = self::mutate_and_get_payload( $input, $type_registry );
+
+					// Options were just written; drop any setting-group models loaded
+					// earlier in this request so payload fields resolve fresh values.
+					$context->get_loader( 'setting_group' )->clear_all();
+
+					return $payload;
+				},
+			]
+		);
+	}
+
+	/**
+	 * Defines the mutation input field configuration.
+	 *
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry The WPGraphQL TypeRegistry
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public static function get_input_fields( TypeRegistry $type_registry ) {
+		$allowed_settings = DataSource::get_allowed_settings( $type_registry );
+
+		$input_fields = [];
+
+		if ( ! empty( $allowed_settings ) ) {
+
+			/**
+			 * Loop through the $allowed_settings and build fields
+			 * for the individual settings
+			 */
+			foreach ( $allowed_settings as $setting ) {
+				if ( ! isset( $setting['type'] ) || ! $type_registry->get_type( $setting['type'] ) ) {
+					continue;
+				}
+
+				/**
+				 * Readonly settings are not writable, so they are not added to the
+				 * mutation input, UNLESS they carry a `graphql_deprecated_input` reason.
+				 * In that case the input field is kept (marked deprecated) so existing
+				 * schemas that already exposed it don't break; it still rejects the write
+				 * at runtime in mutate_and_get_payload().
+				 */
+				$deprecation_reason = ! empty( $setting['graphql_deprecated_input'] ) ? (string) $setting['graphql_deprecated_input'] : null;
+
+				if ( ! empty( $setting['graphql_readonly'] ) && null === $deprecation_reason ) {
+					continue;
+				}
+
+				/**
+				 * The flat (group-prefixed) input field name is derived once in the
+				 * normalized settings map so the input and payload surfaces agree.
+				 */
+				$individual_setting_key = isset( $setting['graphql_settings_field_name'] ) ? (string) $setting['graphql_settings_field_name'] : '';
+
+				if ( empty( $individual_setting_key ) ) {
+					continue;
+				}
+
+				/**
+				 * Dynamically build the individual setting,
+				 * then add it to the $input_fields
+				 */
+				$input_fields[ $individual_setting_key ] = [
+					'type'        => $setting['type'],
+					'description' => $setting['description'] ?? null,
+				];
+
+				if ( null !== $deprecation_reason ) {
+					$input_fields[ $individual_setting_key ]['deprecationReason'] = $deprecation_reason;
+				}
+			}
+		}
+
+		return $input_fields;
+	}
+
+	/**
+	 * Defines the mutation output field configuration.
+	 *
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry The WPGraphQL TypeRegistry
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public static function get_output_fields( TypeRegistry $type_registry ) {
+
+		/**
+		 * Get the allowed setting groups and their fields
+		 */
+		$allowed_setting_groups = DataSource::get_allowed_settings_by_group( $type_registry );
+
+		$output_fields = [];
+
+		/**
+		 * Get all of the settings, regardless of group
+		 */
+		$output_fields['allSettings'] = [
+			'type'        => 'Settings',
+			'description' => static function () {
+				return __( 'Update all settings.', 'wp-graphql' );
+			},
+			'resolve'     => static function () {
+				return true;
+			},
+		];
+
+		if ( ! empty( $allowed_setting_groups ) && is_array( $allowed_setting_groups ) ) {
+			foreach ( $allowed_setting_groups as $group => $setting_type ) {
+				$group_key         = DataSource::format_group_name( $group );
+				$setting_type_name = Utils::format_type_name( $group_key . 'Settings' );
+
+				$output_fields[ Utils::format_field_name( $setting_type_name ) ] = [
+					'type'        => $setting_type_name,
+					// translators: %s is the setting type name
+					'description' => static function () use ( $setting_type_name ) {
+						// translators: %s is the setting type name
+						return sprintf( __( 'Update the %s setting.', 'wp-graphql' ), $setting_type_name );
+					},
+					'resolve'     => static function ( $root, array $args, AppContext $context ) use ( $group_key ) {
+						return $context->get_loader( 'setting_group' )->load_deferred( $group_key );
+					},
+				];
+			}
+		}
+		return $output_fields;
+	}
+
+	/**
+	 * Defines the mutation data modification closure.
+	 *
+	 * @param array<string,mixed>              $input The mutation input
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry The WPGraphQL TypeRegistry
+	 *
+	 * @return array<string,array<string,mixed>>
+	 *
+	 * @throws \GraphQL\Error\UserError
+	 */
+	public static function mutate_and_get_payload( array $input, TypeRegistry $type_registry ): array {
+		/**
+		 * Check that the user can manage setting options
+		 */
+		if ( ! current_user_can( 'manage_options' ) ) {
+			throw new UserError( esc_html__( 'Sorry, you are not allowed to edit settings as this user.', 'wp-graphql' ) );
+		}
+
+		/**
+		 * The $updatable_settings_options will store all of the allowed
+		 * settings in a WP ready format
+		 */
+		$updatable_settings_options = [];
+
+		$allowed_settings = DataSource::get_allowed_settings( $type_registry );
+
+		/**
+		 * Loop through the $allowed_settings and build the insert options array
+		 */
+		foreach ( $allowed_settings as $key => $setting ) {
+
+			/**
+			 * The flat input field name is derived once in the normalized settings
+			 * map, so this matches the name registered on the input type.
+			 */
+			$individual_setting_key = isset( $setting['graphql_settings_field_name'] ) ? (string) $setting['graphql_settings_field_name'] : '';
+
+			if ( empty( $individual_setting_key ) ) {
+				continue;
+			}
+
+			/**
+			 * Dynamically build the individual setting,
+			 * then add it to $updatable_settings_options
+			 */
+			$updatable_settings_options[ Utils::format_field_name( $individual_setting_key ) ] = [
+				'option'   => $key,
+				'group'    => $setting['group'],
+				'readonly' => ! empty( $setting['graphql_readonly'] ),
+			];
+		}
+
+		foreach ( $input as $key => $value ) {
+			/**
+			 * Check to see that the input field exists in settings, if so grab the option
+			 * name and update the option
+			 */
+			if ( ! array_key_exists( $key, $updatable_settings_options ) ) {
+				continue;
+			}
+
+			/**
+			 * Throw an error if the setting is readonly, e.g. the site url,
+			 * as we do not want users changing it and breaking all the things
+			 */
+			if ( ! empty( $updatable_settings_options[ $key ]['readonly'] ) ) {
+				throw new UserError(
+					sprintf(
+						/* translators: %s is the name of the readonly settings input field. */
+						esc_html__( 'Sorry, the %s setting cannot be changed with this mutation, speak with your site administrator to change it.', 'wp-graphql' ),
+						esc_html( $key )
+					)
+				);
+			}
+
+			update_option( $updatable_settings_options[ $key ]['option'], $value );
+		}
+
+		return $updatable_settings_options;
+	}
+}

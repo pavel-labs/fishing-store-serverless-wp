@@ -40,7 +40,7 @@ if (isset($_ENV['HOST'])) {
 }
 
 /** Database charset to use in creating database tables. */
-define( 'DB_CHARSET', 'utf8' );
+define( 'DB_CHARSET', 'utf8mb4' );
 
 /** The database collate type. Don't change this if in doubt. */
 if (isset($_ENV['DB_COLLATE'])) {
@@ -66,14 +66,14 @@ else {
  *
  * @since 2.6.0
  */
-define( 'AUTH_KEY',         'put your unique phrase here' );
-define( 'SECURE_AUTH_KEY',  'put your unique phrase here' );
-define( 'LOGGED_IN_KEY',    'put your unique phrase here' );
-define( 'NONCE_KEY',        'put your unique phrase here' );
-define( 'AUTH_SALT',        'put your unique phrase here' );
-define( 'SECURE_AUTH_SALT', 'put your unique phrase here' );
-define( 'LOGGED_IN_SALT',   'put your unique phrase here' );
-define( 'NONCE_SALT',       'put your unique phrase here' );
+define( 'AUTH_KEY',         '=c{vT,#]1{7Pi%=/O[/=0hC:u=T(W4o5J%/a0$IugaL9J/j1;!Fb}pGTWo5RPuF8' );
+define( 'SECURE_AUTH_KEY',  ']W7Zeo%E*Z9A{a<5jd=F<G|{^{mi:cC;1e-+.^Kc6>TwqnW4B8Z#2;w,N9eWYiv|' );
+define( 'LOGGED_IN_KEY',    '?;Qqei%@C~98KUIHLE#$h1#*8xkjOG`#%T}DmSf6-ca*S_T0CcH&k#@(>&?I)MAW' );
+define( 'NONCE_KEY',        'ShKPWyt6+1GP*}49h]KG#7E-7/kl6]$+d"iwh:OVv2XA61dn|Fc4pSpy9)h8Z;N~' );
+define( 'AUTH_SALT',        ';*)oo8("O<",;TpJ`@3O,*Wf,50RH7IIr<=/!^#@3%03g/<=*)9h4Y*%6n@9BSGr' );
+define( 'SECURE_AUTH_SALT', 'YA`.fV2%u_;-n^06y+x4dX-Q1+CY]rPzZ<H!hAkhQ})H#j-hVMdgd4u5DSp%..bR' );
+define( 'LOGGED_IN_SALT',   '!KpJ`qaa!(l1GB?MJC@fW;jD$XG8ODAbD;HV4UjrX7MRmExH~G@Ix;k<{NpDA!x;' );
+define( 'NONCE_SALT',       'P+KlR|O7(99)WiS8d,[:V-1~1-:0]M|C>4Pk}KEnd2JO8[(]vbUz83A4Eh:/HIKe' );
 
 /**#@-*/
 

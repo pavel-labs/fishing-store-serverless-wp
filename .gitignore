@@ -4,3 +4,10 @@ package-lock.json
 test/auth.json
 test/screenshots/
 test/test-results/
+
+# Migration artifacts - database dumps carry API keys, payment settings and
+# password hashes, so they must never be committed.
+*.sql
+*.sqlite
+wpvivid_*
+.vercel/
