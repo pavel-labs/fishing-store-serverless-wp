@@ -1,4 +1,5 @@
 {
+  "regions": ["fra1"],
   "routes": [
     {
       "src": "^/((?:wp-admin|wp-content|wp-includes)/.+)\\.(css|js|svg|png|gif|jpg|jpeg|webp|woff|woff2|ico|otf)$",
