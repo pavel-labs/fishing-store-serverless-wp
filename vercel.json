@@ -13,7 +13,6 @@
       "dest": "/wp/$1.$2"
     },
     {
-      "comment": "Apache and nginx redirect a directory request to its trailing-slash form; there is no filesystem here to do that. Without it the browser stays on /wp-admin, and the admin menu's relative links (admin.php?page=wc-orders) resolve against / instead of /wp-admin/, producing a 404 on every menu item.",
       "src": "^/(wp-admin|wp-includes|wp-content)$",
       "status": 308,
       "headers": {
