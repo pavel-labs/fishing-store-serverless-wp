@@ -52,9 +52,11 @@ function fss_headless_should_pass_through() {
 		return true;
 	}
 
-	// Previewing drafts from the admin bar is worth keeping for whoever edits
-	// the catalogue.
-	if ( is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+	// Previewing an unpublished post is the one reason to render the theme, so
+	// allow exactly that and nothing else. Being logged in is deliberately not
+	// enough: an editor browsing the site normally should land on the
+	// storefront like everyone else.
+	if ( ( is_preview() || is_customize_preview() ) && current_user_can( 'edit_posts' ) ) {
 		return true;
 	}
 
