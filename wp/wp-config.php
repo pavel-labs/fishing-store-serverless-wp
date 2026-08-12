@@ -55,27 +55,18 @@ else {
   }
 }
 
-/**#@+
+/**
  * Authentication unique keys and salts.
  *
- * Change these to different unique phrases! You can generate these using
- * the {@link https://api.wordpress.org/secret-key/1.1/salt/ WordPress.org secret-key service}.
+ * Deliberately not defined here. When these constants are absent, wp_salt()
+ * generates a value per key and stores it in the options table, so the
+ * repository carries no secret that would let anyone forge an auth cookie.
  *
- * You can change these at any point in time to invalidate all existing cookies.
- * This will force all users to have to log in again.
+ * Define them here only if this repository is private, or read them from the
+ * environment - never leave the starter's shared placeholder phrases in place.
  *
  * @since 2.6.0
  */
-define( 'AUTH_KEY',         '=c{vT,#]1{7Pi%=/O[/=0hC:u=T(W4o5J%/a0$IugaL9J/j1;!Fb}pGTWo5RPuF8' );
-define( 'SECURE_AUTH_KEY',  ']W7Zeo%E*Z9A{a<5jd=F<G|{^{mi:cC;1e-+.^Kc6>TwqnW4B8Z#2;w,N9eWYiv|' );
-define( 'LOGGED_IN_KEY',    '?;Qqei%@C~98KUIHLE#$h1#*8xkjOG`#%T}DmSf6-ca*S_T0CcH&k#@(>&?I)MAW' );
-define( 'NONCE_KEY',        'ShKPWyt6+1GP*}49h]KG#7E-7/kl6]$+d"iwh:OVv2XA61dn|Fc4pSpy9)h8Z;N~' );
-define( 'AUTH_SALT',        ';*)oo8("O<",;TpJ`@3O,*Wf,50RH7IIr<=/!^#@3%03g/<=*)9h4Y*%6n@9BSGr' );
-define( 'SECURE_AUTH_SALT', 'YA`.fV2%u_;-n^06y+x4dX-Q1+CY]rPzZ<H!hAkhQ})H#j-hVMdgd4u5DSp%..bR' );
-define( 'LOGGED_IN_SALT',   '!KpJ`qaa!(l1GB?MJC@fW;jD$XG8ODAbD;HV4UjrX7MRmExH~G@Ix;k<{NpDA!x;' );
-define( 'NONCE_SALT',       'P+KlR|O7(99)WiS8d,[:V-1~1-:0]M|C>4Pk}KEnd2JO8[(]vbUz83A4Eh:/HIKe' );
-
-/**#@-*/
 
 /**
  * WordPress database table prefix.
