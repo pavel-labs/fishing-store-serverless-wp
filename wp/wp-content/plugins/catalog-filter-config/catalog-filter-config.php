@@ -7,6 +7,12 @@
  * Text Domain: catalog-filter-config
  * Requires PHP: 8.0
  * WC requires at least: 7.0
+ * License:     GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * Bundled third-party assets:
+ * - assets/sortable.min.js  Sortable 1.15.0, MIT
+ * - assets/xlsx.full.min.js SheetJS Community Edition, Apache-2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
