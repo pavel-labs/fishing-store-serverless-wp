@@ -3,5 +3,5 @@
   "platform": "linux-x64-al2023",
   "sourceUrl": "https://www.php.net/distributions/php-8.3.36.tar.bz2",
   "sourceSha256": "46f4b45e3688ed2b1819015a7b532c15b51cc055bdd3b13fd00ddfeebeedcd5f",
-  "sha256": "c31ff09c2cccedf891d94954a0b897eb55d192c6364f6c9a0f9422b0f792af4e"
+  "sha256": "df2770e1feb1aaa75b3324326d7c973574a96755891c34189179bf92c4c1ef04"
 }
