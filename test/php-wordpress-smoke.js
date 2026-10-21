@@ -24,7 +24,7 @@ if (!is_blog_installed()) { wp_install('CI store', 'admin', 'admin@example.com',
 $plugins = [
   'woocommerce/woocommerce.php', 'wp-graphql/wp-graphql.php',
   'woocommerce-gateway-stripe/woocommerce-gateway-stripe.php',
-  'simple-jwt-login/simple-jwt-login.php',
+  'simple-jwt-login/simple-jwt-login.php', 'tidb-compatibility/tidb-compatibility.php',
   'catalog-filter-config/catalog-filter-config.php',
   'product-questions/product-questions.php', 'wishlist/wishlist.php',
 ];
@@ -39,6 +39,7 @@ update_option('woocommerce_default_country', 'US:CA');
 update_option('woocommerce_enable_guest_checkout', 'yes');
 update_option('woocommerce_enable_checkout_login_reminder', 'no');
 update_option('permalink_structure', '/%postname%/');
+if (class_exists('WC_Install')) { WC_Install::create_tables(); }
 header('Content-Type: application/json');
 echo json_encode(['installed' => true, 'plugins' => get_option('active_plugins')]);
 `);
@@ -46,6 +47,8 @@ fs.writeFileSync('/tmp/wp/ci-product.php', `<?php
 if (getenv('SERVERLESSWP_TESTING') !== '1') { http_response_code(404); exit; }
 require __DIR__ . '/wp-load.php';
 WC_Install::install();
+delete_transient('_wc_activation_redirect');
+update_option('woocommerce_onboarding_profile', ['completed' => true]);
 $product = new WC_Product_Simple();
 $product->set_name('CI test lure');
 $product->set_status('publish');
@@ -55,6 +58,14 @@ $product->set_catalog_visibility('visible');
 $product->save();
 header('Content-Type: application/json');
 echo json_encode(['id' => $product->get_id(), 'version' => PHP_VERSION, 'uploadProgress' => ini_get('session.upload_progress.enabled')]);
+`);
+
+fs.writeFileSync('/tmp/wp/ci-upload.php', `<?php
+if (getenv('SERVERLESSWP_TESTING') !== '1') { http_response_code(404); exit; }
+header('Content-Type: application/json');
+$file = $_FILES['file'] ?? null;
+echo json_encode(['name' => $file['name'] ?? null, 'error' => $file['error'] ?? null,
+  'uploaded' => $file ? is_uploaded_file($file['tmp_name']) : false]);
 `);
 
 const { handler } = require('../api/index.js');
@@ -79,7 +90,7 @@ async function request(url, { method = 'GET', body, headers = {} } = {}) {
     return { ...response, text, json: () => JSON.parse(text) };
 }
 function status(response, expected) {
-    assert.equal(response.statusCode, expected, response.text.slice(0, 1500));
+    assert.equal(response.statusCode, expected, JSON.stringify({ location: response.headers?.location, body: response.text.slice(0, 1500) }));
 }
 
 (async () => {
@@ -93,6 +104,15 @@ function status(response, expected) {
     assert.equal(product.version, '8.3.36');
     assert.ok(!Number(product.uploadProgress));
     console.log('PASS: WordPress install, plugins, PHP version and startup hardening');
+    const boundary = 'ci-safe-upload-boundary';
+    response = await request('/ci-upload.php', {
+        method: 'POST', headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+        body: `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="ci-upload.txt"\r\nContent-Type: text/plain\r\n\r\nSafe upload fixture\r\n--${boundary}--\r\n`,
+    });
+    status(response, 200);
+    assert.deepEqual(response.json(), { name: 'ci-upload.txt', error: 0, uploaded: true });
+    console.log('PASS: normal multipart file upload reaches patched PHP');
+
 
     response = await request('/wp-login.php');
     status(response, 200);
@@ -104,8 +124,16 @@ function status(response, expected) {
     status(response, 302);
     assert.ok([...cookies.keys()].some(name => name.startsWith('wordpress_logged_in_')));
     response = await request('/wp-admin/');
+    for (let redirects = 0; [301, 302, 303].includes(response.statusCode) && redirects < 6; redirects++) {
+        const location = response.headers.location;
+        assert.ok(location, 'admin redirect has a destination');
+        const destination = new URL(location, 'https://ci.example.test');
+        assert.equal(destination.host, 'ci.example.test');
+        assert.ok(destination.pathname.startsWith('/wp-admin/'), `unexpected admin redirect: ${location}`);
+        response = await request(destination.pathname + destination.search);
+    }
     status(response, 200);
-    assert.match(response.text, /Dashboard/);
+    assert.match(response.text, /id="wpbody"/);
     console.log('PASS: admin login and dashboard');
     cookies = new Map();
 

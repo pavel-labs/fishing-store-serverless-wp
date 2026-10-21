@@ -26,9 +26,46 @@ Unpatched, unknown, prerelease, or non-executable runtimes return a generic, non
 3. Restrict or remove older, directly reachable deployments that still run vulnerable code. Use the hosting platform's access controls; this repository cannot change existing deployments.
 4. Check the storefront's behavior while its backend is unavailable. Cached pages may remain available; live catalog, checkout, and payment callbacks can fail. Arrange payment-provider retries/reconciliation before resuming orders.
 
+## Project-owned patched runtime
+
+The repository builds PHP **8.3.36** in `build/php/Dockerfile` from the official
+source archive, pinned to SHA-256
+`46f4b45e3688ed2b1819015a7b532c15b51cc055bdd3b13fd00ddfeebeedcd5f`.
+It targets Amazon Linux 2023 / x86_64, includes the WordPress extensions, and
+disables session upload progress in startup configuration. The Node framework
+remains pinned to `serverlesswp@0.5.5` to preserve its API.
+
+The build workflow packages the executable, matching OPcache extension, shared
+libraries and licenses into `vendor/php/php-runtime.tar.gz`, records provenance
+and the archive digest in `vendor/php/runtime.json`, and commits the verified
+result to the update branch. `npm ci` checks that digest and installs the
+runtime into `node_modules/serverlesswp/php-files` before Vercel packages the
+function. Nothing is downloaded or compiled during a web request.
+
+Vercel runs `npm run security:php` as its build command. If the archive is
+missing, altered, non-executable or below the security minimum, deployment
+fails instead of silently shipping the original PHP. The request guard remains
+enabled as an additional check in the deployed function.
+
+To build again locally with Docker:
+
+```sh
+docker build --platform linux/amd64 --output type=local,dest=.php-runtime -f build/php/Dockerfile .
+node build/php/package.js
+npm ci
+npm run security:php
+npm test
+```
+
+The workflow also tests against disposable MySQL in the Node.js 22 Lambda image:
+WordPress installation, deployed plugin activation, admin login, REST products,
+GraphQL, guest cart/checkout with cash-on-delivery, and dispatch of an invalid
+Stripe callback. It does not send a real payment, test a signed live webhook,
+or modify the production database.
+
 ## Restore service with a fixed runtime
 
-1. Obtain a ServerlessWP release containing PHP **8.3.36 or later** (or another supported release meeting the table). Check the actual binary, not just the npm version. If upstream has not published it, build a private patched package from the [upstream build recipe](https://github.com/mitchmac/serverlesswp-node/tree/main/build) using PHP 8.3.36's official source archive and verified checksum. Rebuild the matching extensions and libraries for Amazon Linux 2023/x86_64; do not replace it with a random system PHP or alter its reported version.
+1. Use this repository's verified runtime archive and lockfile. For a future upgrade, update the source version/checksum, installer policy and tests together; rebuild the executable, matching extensions and shared libraries. Check the actual binary, not just the npm version. An upstream patched package can replace this mechanism after compatibility testing.
 2. Pin the reviewed package and commit its lockfile if introducing dependency locking. Test framework API changes before upgrading to a different ServerlessWP minor release; this store currently uses the 0.5 API.
 3. Run `npm run security:php` in the same Linux runtime as the deployment. It must exit successfully. A missing/incompatible executable also fails closed. A package version alone is insufficient proof.
 4. Test in a protected preview with a disposable database: wp-admin login, REST product queries, GraphQL, cart/checkout, gateway callbacks, and media upload if used. Run `npm test` for the Node regression suite.

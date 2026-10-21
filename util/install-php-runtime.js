@@ -23,7 +23,7 @@ function install(root = path.resolve(__dirname, '..')) {
         return;
     }
 
-    const target = path.resolve(path.dirname(require.resolve('serverlesswp')), '../php-files');
+    const target = path.resolve(path.dirname(require.resolve('serverlesswp', { paths: [root] })), '../php-files');
     const staging = fs.mkdtempSync(path.join(path.dirname(target), '.php-runtime-'));
     try {
         const names = execFileSync('tar', ['-tzf', archive], { encoding: 'utf8' }).trim().split('\n');
