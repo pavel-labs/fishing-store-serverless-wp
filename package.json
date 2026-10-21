@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "license": "MIT",
+  "scripts": {
+    "security:php": "node util/check-php-runtime.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.772.0",
     "@vercel/blob": "^2.3.3",

@@ -8,6 +8,8 @@ The WooCommerce backend for the [Angler's Paradise](https://fishing-store.vercel
 
 📖 **[Full documentation → `docs/MIGRATION.md`](docs/MIGRATION.md)**
 
+**PHP security:** Dynamic requests return 503 until the bundled PHP runtime passes the fixed-version check for CVE-2026-109618 and CVE-2026-109619. Run `npm run security:php`; see [the containment and recovery runbook](docs/PHP-SECURITY.md). Deploying this guard takes the API and admin offline when the runtime is vulnerable; restoring service requires a patched PHP package and a new deployment.
+
 ---
 
 ## Layout
