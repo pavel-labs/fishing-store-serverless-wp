@@ -6,7 +6,7 @@
 
 The Node.js function launches `node_modules/serverlesswp/php-files/php`. Updating the platform's Node.js runtime or the system `php` executable does not replace it.
 
-On 21 October, a fresh install of this repository resolves `serverlesswp@0.5.5`, bundling PHP **8.3.33**. The latest published `serverlesswp@0.7.1` bundles **8.3.35**, also below the fixed version. Do not treat an npm upgrade alone as remediation; recheck availability and inspect the installed binary.
+Before this update, `serverlesswp@0.5.5` supplied PHP **8.3.33**. At inspection on 21 October, the latest published `serverlesswp@0.7.1` still supplied **8.3.35**, also below the fixed version. This repository now replaces that bundled interpreter with its own verified **8.3.36** build during installation. Do not treat an npm version alone as proof of remediation; inspect the installed binary.
 
 The guard in `api/index.js` probes that executable once per function instance, without configuration or application code, using ServerlessWP's bundled shared libraries. Only stable releases in these verified branches are allowed:
 
@@ -37,8 +37,9 @@ remains pinned to `serverlesswp@0.5.5` to preserve its API.
 
 The build workflow packages the executable, matching OPcache extension, shared
 libraries and licenses into `vendor/php/php-runtime.tar.gz`, records provenance
-and the archive digest in `vendor/php/runtime.json`, and commits the verified
-result to the update branch. `npm ci` checks that digest and installs the
+and the archive digest in `vendor/php/runtime.json`, and commits the compiled
+result to the update branch. WordPress/WooCommerce checks must also pass before
+that branch is merged. `npm ci` checks that digest and installs the
 runtime into `node_modules/serverlesswp/php-files` before Vercel packages the
 function. Nothing is downloaded or compiled during a web request.
 

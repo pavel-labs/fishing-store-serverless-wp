@@ -1,5 +1,7 @@
 FROM public.ecr.aws/lambda/nodejs:22
 
+RUN dnf install -y tar gzip && dnf clean all
+
 COPY package.json package-lock.json ${LAMBDA_TASK_ROOT}/
 COPY util/install-php-runtime.js ${LAMBDA_TASK_ROOT}/util/install-php-runtime.js
 COPY vendor/php/ ${LAMBDA_TASK_ROOT}/vendor/php/

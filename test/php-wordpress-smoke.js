@@ -30,7 +30,7 @@ $plugins = [
 ];
 foreach ($plugins as $plugin) {
   if (!file_exists(WP_PLUGIN_DIR . '/' . $plugin)) { continue; }
-  $result = activate_plugin($plugin, '', false, true);
+  $result = activate_plugin($plugin, '', false, false);
   if (is_wp_error($result)) { throw new Exception($result->get_error_message()); }
 }
 update_option('woocommerce_cod_settings', ['enabled' => 'yes', 'enable_for_virtual' => 'yes']);

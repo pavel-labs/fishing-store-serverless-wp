@@ -81,7 +81,7 @@ jobs:
           -e DATABASE=wordpress_test -e USERNAME=root -e PASSWORD=test-only-password
           -e HOST=127.0.0.1:3306 -e SKIP_MYSQL_SSL=1
           public.ecr.aws/lambda/nodejs:22
-          -c 'npm run security:php && npm test && node test/php-wordpress-smoke.js'
+          -c 'dnf install -y tar gzip >/dev/null && npm run security:php && npm test && node test/php-wordpress-smoke.js'
       - uses: actions/upload-artifact@v4
         with:
           name: php-8.3.36-al2023-x64
