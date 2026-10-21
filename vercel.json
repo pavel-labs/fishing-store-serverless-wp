@@ -37,6 +37,5 @@
       "NODEJS_AWS_HANDLER_NAME": "handler"
     }
   },
-  "installCommand": "npm ci",
-  "buildCommand": "npm run security:php"
+  "installCommand": "npm ci"
 }

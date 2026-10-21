@@ -155,7 +155,7 @@ function status(response, expected) {
     response = await request('/index.php?rest_route=/wc/store/v1/cart/add-item', {
         method: 'POST', headers: cartHeaders, body: { id: product.id, quantity: 1 },
     });
-    status(response, 200);
+    status(response, 201);
     assert.equal(response.json().items[0].id, product.id);
     response = await request('/index.php?rest_route=/wc/store/v1/checkout', {
         method: 'POST', headers: cartHeaders, body: {

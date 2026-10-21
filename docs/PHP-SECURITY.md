@@ -43,7 +43,7 @@ that branch is merged. `npm ci` checks that digest and installs the
 runtime into `node_modules/serverlesswp/php-files` before Vercel packages the
 function. Nothing is downloaded or compiled during a web request.
 
-Vercel runs `npm run security:php` as its build command. If the archive is
+The `npm ci` postinstall hook installs and verifies the PHP runtime, without introducing a separate static-site build step on Vercel. If the archive is
 missing, altered, non-executable or below the security minimum, deployment
 fails instead of silently shipping the original PHP. The request guard remains
 enabled as an additional check in the deployed function.

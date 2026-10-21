@@ -6,7 +6,7 @@
   "scripts": {
     "security:php": "node util/check-php-runtime.js",
     "test": "node --test --test-concurrency=1 test/*.test.js",
-    "postinstall": "node util/install-php-runtime.js"
+    "postinstall": "node util/install-php-runtime.js && node util/check-php-runtime.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.772.0",

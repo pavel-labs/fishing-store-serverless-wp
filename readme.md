@@ -32,7 +32,7 @@ Adding or updating one means committing it, not clicking in the dashboard — `D
 
 ## Deploying
 
-Push to `main`. Vercel runs `npm ci` to install dependencies and the verified PHP runtime, then `npm run security:php` before packaging the function.
+Push to `main`. Vercel runs `npm ci` to install dependencies and the verified PHP runtime, and validates the bundled PHP before packaging the function.
 
 Environment variables (`DATABASE`, `USERNAME`, `PASSWORD`, `HOST`) are set in the Vercel dashboard and **only take effect on a new deployment**. Setup details are in [Setting up from scratch](docs/MIGRATION.md#setting-up-from-scratch).
 
