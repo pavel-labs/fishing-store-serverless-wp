@@ -123,7 +123,7 @@ Add to `vercel.json`, matching your database region:
 
 ### 5. Deploy
 
-Import the repository in Vercel, framework preset **Other** (there is no build step). Confirm the production branch is the one you expect — otherwise you get a preview deployment and wonder why nothing changed.
+Import the repository in Vercel, framework preset **Other**. The repository runs `npm ci` to install the verified PHP runtime, validates the installed executable; see [PHP security](PHP-SECURITY.md). Confirm the production branch is the one you expect — otherwise you get a preview deployment and wonder why nothing changed.
 
 ---
 

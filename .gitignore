@@ -1,5 +1,4 @@
 node_modules/
-package-lock.json
 .serverless
 test/auth.json
 test/screenshots/
@@ -11,3 +10,5 @@ test/test-results/
 *.sqlite
 wpvivid_*
 .vercel/
+
+.php-runtime/

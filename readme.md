@@ -2,13 +2,13 @@
 
 The WooCommerce backend for the [Angler's Paradise](https://fishing-store.vercel.app) storefront. WordPress runs inside a Vercel serverless function via [ServerlessWP](https://github.com/mitchmac/serverlesswp), with the database on TiDB Cloud.
 
-![WordPress 7.0.2](https://img.shields.io/badge/WordPress-7.0.2-blue?logo=wordpress&labelColor=white&logoColor=black) ![PHP 8.3](https://img.shields.io/badge/PHP-8.3-blue?logo=php&labelColor=white) ![WooCommerce 11.0.0](https://img.shields.io/badge/WooCommerce-11.0.0-7f54b3?labelColor=white)
+![WordPress 7.0.2](https://img.shields.io/badge/WordPress-7.0.2-blue?logo=wordpress&labelColor=white&logoColor=black) ![PHP 8.3](https://img.shields.io/badge/PHP-8.3.36-blue?logo=php&labelColor=white) ![WooCommerce 11.0.0](https://img.shields.io/badge/WooCommerce-11.0.0-7f54b3?labelColor=white)
 
 **This is headless.** Public front-end requests are redirected to the storefront; the deployment exists to serve `wp-admin` and the REST/GraphQL API that the Next.js app consumes. The storefront lives in a separate repository.
 
 📖 **[Full documentation → `docs/MIGRATION.md`](docs/MIGRATION.md)**
 
-**PHP security:** Dynamic requests return 503 until the bundled PHP runtime passes the fixed-version check for CVE-2026-109618 and CVE-2026-109619. Run `npm run security:php`; see [the containment and recovery runbook](docs/PHP-SECURITY.md). Deploying this guard takes the API and admin offline when the runtime is vulnerable; restoring service requires a patched PHP package and a new deployment.
+**PHP security:** `npm ci` installs the checksum-verified PHP **8.3.36** runtime built from official source for Amazon Linux 2023. The deployment build and request guard both verify the PHP version for CVE-2026-109618 and CVE-2026-109619. Run `npm run security:php`; see [the build and recovery runbook](docs/PHP-SECURITY.md).
 
 ---
 
@@ -32,7 +32,7 @@ Adding or updating one means committing it, not clicking in the dashboard — `D
 
 ## Deploying
 
-Push to `main`. Vercel builds from the repository as-is; there is no build step.
+Push to `main`. Vercel runs `npm ci` to install dependencies and the verified PHP runtime, and validates the bundled PHP before packaging the function.
 
 Environment variables (`DATABASE`, `USERNAME`, `PASSWORD`, `HOST`) are set in the Vercel dashboard and **only take effect on a new deployment**. Setup details are in [Setting up from scratch](docs/MIGRATION.md#setting-up-from-scratch).
 

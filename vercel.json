@@ -1,5 +1,7 @@
 {
-  "regions": ["fra1"],
+  "regions": [
+    "fra1"
+  ],
   "routes": [
     {
       "src": "^/((?:wp-admin|wp-content|wp-includes)/.+)\\.(css|js|svg|png|gif|jpg|jpeg|webp|woff|woff2|ico|otf)$",
@@ -26,7 +28,7 @@
   ],
   "functions": {
     "api/vercel.js": {
-      "includeFiles": "wp/**",
+      "includeFiles": "{wp/**,node_modules/serverlesswp/php-files/**}",
       "maxDuration": 60
     }
   },
@@ -34,5 +36,6 @@
     "env": {
       "NODEJS_AWS_HANDLER_NAME": "handler"
     }
-  }
+  },
+  "installCommand": "npm ci"
 }
