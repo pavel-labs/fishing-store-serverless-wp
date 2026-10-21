@@ -171,7 +171,7 @@ function status(response, expected) {
     console.log('PASS: guest cart and checkout with cash-on-delivery (no external payment)');
 
     response = await request('/index.php?wc-api=wc_stripe', { method: 'POST', body: {} });
-    assert.ok([200, 400, 401, 403].includes(response.statusCode), response.text);
+    status(response, 204);
     assert.doesNotMatch(response.text, /Fatal error|Uncaught|critical error/i);
     console.log(`PASS: Stripe callback reaches the gateway (HTTP ${response.statusCode}); live signed events are not tested`);
     process.exit(0);
